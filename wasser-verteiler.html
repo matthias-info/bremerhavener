@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaltwasser- & Abwasserkosten-Verteiler</title>
+    <title>Wasserkosten-Verteiler</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
-            max-width: 100%; 
             margin: 0; 
             padding: 10px; 
             background: #f4f7f9; 
             font-size: 15px;
+            line-height: 1.5;
         }
         .container { 
             background: white; 
             padding: 15px; 
             border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            max-width: 100%;
         }
-        h1, h2 { color: #1e40af; }
+        h1 { color: #1e40af; text-align: center; margin-bottom: 8px; }
+        h2 { color: #1e40af; margin: 18px 0 8px; font-size: 1.1em; }
+        p { margin: 8px 0; }
         table { 
             width: 100%; 
             border-collapse: collapse; 
@@ -27,20 +30,22 @@
             font-size: 14px;
         }
         th, td { 
-            padding: 8px 6px; 
-            border: 1px solid #ccc; 
+            padding: 9px 6px; 
+            border: 1px solid #ddd; 
             text-align: right; 
         }
         th { 
             background: #dbeafe; 
             text-align: left; 
-            font-size: 13px;
+            font-weight: 600;
         }
         input { 
             width: 100%; 
-            padding: 8px; 
+            padding: 9px; 
             box-sizing: border-box; 
             font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
         input[readonly] { 
             background: #f3f4f6; 
@@ -50,13 +55,15 @@
             background: #1e40af; 
             color: white; 
             border: none; 
-            padding: 14px; 
-            font-size: 16px;
+            padding: 16px; 
+            font-size: 17px;
             border-radius: 8px; 
             cursor: pointer; 
             width: 100%;
-            margin: 15px 0;
+            margin: 20px 0 10px;
+            font-weight: bold;
         }
+        button:hover { background: #1e3a8a; }
         .result { 
             margin-top: 20px; 
             padding: 15px; 
@@ -73,21 +80,25 @@
             font-size: 14.5px;
         }
         .highlight { background: #fef3c7; font-weight: bold; }
-        .table-container { overflow-x: auto; margin-bottom: 15px; }
+        .table-container { 
+            overflow-x: auto; 
+            margin-bottom: 15px; 
+            -webkit-overflow-scrolling: touch;
+        }
         .info { font-size: 13.5px; color: #444; }
+        .small { font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🧮 Wasserkosten-Verteiler</h1>
-        <p><strong>3-Familienhaus • Altbau • swb-kompatibel</strong></p>
+        <p style="text-align:center; color:#1e40af;"><strong>3-Familien-Altbau • EG, OG, DG</strong></p>
 
         <div class="explanation">
-            <h2>So wird verteilt:</h2>
-            <ul>
-                <li>Grundpreis gleichmäßig durch 3</li>
-                <li>Verbrauchsteile nach realer Anwesenheit + Schätzung Spüle EG</li>
-            </ul>
+            <strong>So wird verteilt:</strong><br>
+            • Grundpreis gleichmäßig durch 3<br>
+            • Spüle EG wird geschätzt<br>
+            • Rest (Duschen/Toiletten) nach Anwesenheit
         </div>
 
         <h2>1. Rechnungssummen (€ pro Jahr)</h2>
@@ -105,21 +116,174 @@
         </table>
 
         <h2>3. Verbräuche (m³ pro Monat)</h2>
-        <!-- ... (die restlichen Eingabefelder bleiben gleich wie bisher) -->
-        <!-- Ich habe hier aus Platzgründen nur die Struktur gezeigt. Die vollständige Version mit allen Feldern sende ich dir gerne. -->
+        <table>
+            <tr><td>Haus Kaltwasser gesamt</td><td><input type="number" id="kalt_gesamt" value="42" step="0.01"></td></tr>
+        </table>
 
-        <button onclick="berechne()">💰 Berechnen</button>
+        <h3>Waschmaschinen</h3>
+        <table>
+            <tr><td>EG</td><td><input type="number" id="wm_eg" value="4.2" step="0.01"></td></tr>
+            <tr><td>OG</td><td><input type="number" id="wm_og" value="1.1" step="0.01"></td></tr>
+            <tr><td>DG</td><td><input type="number" id="wm_dg" value="4.8" step="0.01"></td></tr>
+        </table>
+
+        <h3>Waschbecken</h3>
+        <table>
+            <tr><td>EG kalt</td><td><input type="number" id="wb_eg_k" value="1.1" step="0.01"></td></tr>
+            <tr><td>EG warm</td><td><input type="number" id="wb_eg_w" value="0.8" step="0.01"></td></tr>
+            <tr><td>OG kalt</td><td><input type="number" id="wb_og_k" value="0.35" step="0.01"></td></tr>
+            <tr><td>OG warm</td><td><input type="number" id="wb_og_w" value="0.25" step="0.01"></td></tr>
+            <tr><td>DG kalt</td><td><input type="number" id="wb_dg_k" value="1.3" step="0.01"></td></tr>
+            <tr><td>DG warm</td><td><input type="number" id="wb_dg_w" value="0.9" step="0.01"></td></tr>
+        </table>
+
+        <h3>Spülen</h3>
+        <table>
+            <tr><td>OG kalt</td><td><input type="number" id="sp_og_k" value="0.95" step="0.01"></td></tr>
+            <tr><td>OG warm</td><td><input type="number" id="sp_og_w" value="0.65" step="0.01"></td></tr>
+            <tr><td>DG kalt</td><td><input type="number" id="sp_dg_k" value="2.8" step="0.01"></td></tr>
+            <tr><td>DG warm</td><td><input type="number" id="sp_dg_w" value="2.1" step="0.01"></td></tr>
+            <tr>
+                <td><strong>Spüle EG (geschätzt)</strong></td>
+                <td><input type="text" id="sp_eg_schaetzung" readonly></td>
+            </tr>
+        </table>
+
+        <button onclick="berechne()">💰 Jetzt berechnen</button>
 
         <div id="ergebnis" class="result"></div>
     </div>
 
     <script>
-        // Hier kommt der vollständige JavaScript-Code (wie in der vorherigen Version)
-        // Ich kann ihn dir komplett schicken, wenn du möchtest.
         function berechne() {
-            alert("Mobile optimierte Version – vollständiger Code auf Anfrage.");
-            // Der volle Code ist sehr lang. Sag Bescheid, wenn du die komplette Datei brauchst.
+            const rechnungFrischJahr = parseFloat(document.getElementById('rechnung_frisch').value) || 0;
+            const rechnungAbwasserJahr = parseFloat(document.getElementById('rechnung_abwasser').value) || 0;
+            const grundpreisJahr = parseFloat(document.getElementById('grundpreis_jahr').value) || 0;
+            const kaltGesamt = parseFloat(document.getElementById('kalt_gesamt').value) || 0;
+
+            let tageEG = Math.max(1, parseFloat(document.getElementById('tage_eg').value) || 30);
+            let tageOG = Math.max(0, parseFloat(document.getElementById('tage_og').value) || 10);
+            let tageDG = Math.max(1, parseFloat(document.getElementById('tage_dg').value) || 30);
+
+            // Bekannte Verbräuche
+            const wmEG = parseFloat(document.getElementById('wm_eg').value) || 0;
+            const wmOG = parseFloat(document.getElementById('wm_og').value) || 0;
+            const wmDG = parseFloat(document.getElementById('wm_dg').value) || 0;
+
+            const wbEGk = parseFloat(document.getElementById('wb_eg_k').value) || 0;
+            const wbEGw = parseFloat(document.getElementById('wb_eg_w').value) || 0;
+            const wbOGk = parseFloat(document.getElementById('wb_og_k').value) || 0;
+            const wbOGw = parseFloat(document.getElementById('wb_og_w').value) || 0;
+            const wbDGk = parseFloat(document.getElementById('wb_dg_k').value) || 0;
+            const wbDGw = parseFloat(document.getElementById('wb_dg_w').value) || 0;
+
+            const spOGk = parseFloat(document.getElementById('sp_og_k').value) || 0;
+            const spOGw = parseFloat(document.getElementById('sp_og_w').value) || 0;
+            const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
+            const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
+
+            // Schätzung Spüle EG
+            const dailyOGk = tageOG > 0 ? spOGk / tageOG : 0;
+            const dailyOGw = tageOG > 0 ? spOGw / tageOG : 0;
+            const dailyDGk = tageDG > 0 ? spDGk / tageDG : 0;
+            const dailyDGw = tageDG > 0 ? spDGw / tageDG : 0;
+
+            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * tageEG;
+            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * tageEG;
+            const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
+
+            document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(3) + " m³";
+
+            const bekanntEG = wmEG + wbEGk + wbEGw + schaetzungEGGesamt;
+            const bekanntOG = wmOG + wbOGk + wbOGw + spOGk + spOGw;
+            const bekanntDG = wmDG + wbDGk + wbDGw + spDGk + spDGw;
+
+            const summeBekannt = bekanntEG + bekanntOG + bekanntDG;
+            const unbekannt = Math.max(0, kaltGesamt - summeBekannt);
+
+            const tageGesamt = tageEG + tageOG + tageDG;
+            const fEG = tageGesamt > 0 ? tageEG / tageGesamt : 0;
+            const fOG = tageGesamt > 0 ? tageOG / tageGesamt : 0;
+            const fDG = tageGesamt > 0 ? tageDG / tageGesamt : 0;
+
+            const unbekEG = unbekannt * fEG;
+            const unbekOG = unbekannt * fOG;
+            const unbekDG = unbekannt * fDG;
+
+            const totalEG = bekanntEG + unbekEG;
+            const totalOG = bekanntOG + unbekOG;
+            const totalDG = bekanntDG + unbekDG;
+            const totalGesamt = totalEG + totalOG + totalDG;
+
+            const anteilEG = totalGesamt > 0 ? totalEG / totalGesamt : 0;
+            const anteilOG = totalGesamt > 0 ? totalOG / totalGesamt : 0;
+            const anteilDG = totalGesamt > 0 ? totalDG / totalGesamt : 0;
+
+            // Kosten
+            const grundMonat = grundpreisJahr / 12;
+            const rechnungFrischMonat = rechnungFrischJahr / 12;
+            const rechnungAbwasserMonat = rechnungAbwasserJahr / 12;
+            const variableFrischMonat = Math.max(0, rechnungFrischMonat - grundMonat);
+
+            const varFrischEG = variableFrischMonat * anteilEG;
+            const varFrischOG = variableFrischMonat * anteilOG;
+            const varFrischDG = variableFrischMonat * anteilDG;
+
+            const grundProPersonMonat = grundpreisJahr / 36;
+
+            const kostenFrischEG = grundProPersonMonat + varFrischEG;
+            const kostenFrischOG = grundProPersonMonat + varFrischOG;
+            const kostenFrischDG = grundProPersonMonat + varFrischDG;
+
+            const kostenAbwEG = rechnungAbwasserMonat * anteilEG;
+            const kostenAbwOG = rechnungAbwasserMonat * anteilOG;
+            const kostenAbwDG = rechnungAbwasserMonat * anteilDG;
+
+            const gesamtMonatEG = kostenFrischEG + kostenAbwEG;
+            const gesamtMonatOG = kostenFrischOG + kostenAbwOG;
+            const gesamtMonatDG = kostenFrischDG + kostenAbwDG;
+
+            let html = `
+                <h2>Ergebnis</h2>
+
+                <div class="table-container">
+                    <h3>1. Verbrauch pro Monat (m³)</h3>
+                    <table>
+                        <tr><th>Wohnung</th><th>Bekannt + Schätzung</th><th>Unbekannt</th><th>Gesamt</th><th>Anteil</th></tr>
+                        <tr><td>EG (${tageEG} Tage)</td><td>${bekanntEG.toFixed(3)}</td><td>${unbekEG.toFixed(3)}</td><td><strong>${totalEG.toFixed(3)}</strong></td><td>${(anteilEG*100).toFixed(1)}%</td></tr>
+                        <tr><td>OG (${tageOG} Tage)</td><td>${bekanntOG.toFixed(3)}</td><td>${unbekOG.toFixed(3)}</td><td><strong>${totalOG.toFixed(3)}</strong></td><td>${(anteilOG*100).toFixed(1)}%</td></tr>
+                        <tr><td>DG (${tageDG} Tage)</td><td>${bekanntDG.toFixed(3)}</td><td>${unbekDG.toFixed(3)}</td><td><strong>${totalDG.toFixed(3)}</strong></td><td>${(anteilDG*100).toFixed(1)}%</td></tr>
+                        <tr class="highlight"><td><strong>Summe</strong></td><td>${summeBekannt.toFixed(3)}</td><td>${unbekannt.toFixed(3)}</td><td><strong>${totalGesamt.toFixed(3)}</strong></td><td>100%</td></tr>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <h3>2. Kosten – Monatlich (€)</h3>
+                    <table>
+                        <tr><th>Wohnung</th><th>Grundpreis</th><th>Verbrauch Frisch</th><th>Frischwasser</th><th>Abwasser</th><th><strong>Gesamt</strong></th></tr>
+                        <tr><td>EG</td><td>${grundProPersonMonat.toFixed(2)}</td><td>${varFrischEG.toFixed(2)}</td><td>${kostenFrischEG.toFixed(2)}</td><td>${kostenAbwEG.toFixed(2)}</td><td><strong>${gesamtMonatEG.toFixed(2)}</strong></td></tr>
+                        <tr><td>OG</td><td>${grundProPersonMonat.toFixed(2)}</td><td>${varFrischOG.toFixed(2)}</td><td>${kostenFrischOG.toFixed(2)}</td><td>${kostenAbwOG.toFixed(2)}</td><td><strong>${gesamtMonatOG.toFixed(2)}</strong></td></tr>
+                        <tr><td>DG</td><td>${grundProPersonMonat.toFixed(2)}</td><td>${varFrischDG.toFixed(2)}</td><td>${kostenFrischDG.toFixed(2)}</td><td>${kostenAbwDG.toFixed(2)}</td><td><strong>${gesamtMonatDG.toFixed(2)}</strong></td></tr>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <h3>3. Kosten – Jährlich (€)</h3>
+                    <table>
+                        <tr><th>Wohnung</th><th>Grundpreis</th><th>Frischwasser</th><th>Abwasser</th><th><strong>Gesamt Jahr</strong></th></tr>
+                        <tr><td>EG</td><td>${(grundpreisJahr/3).toFixed(2)}</td><td>${(kostenFrischEG*12).toFixed(2)}</td><td>${(kostenAbwEG*12).toFixed(2)}</td><td><strong>${(gesamtMonatEG*12).toFixed(2)}</strong></td></tr>
+                        <tr><td>OG</td><td>${(grundpreisJahr/3).toFixed(2)}</td><td>${(kostenFrischOG*12).toFixed(2)}</td><td>${(kostenAbwOG*12).toFixed(2)}</td><td><strong>${(gesamtMonatOG*12).toFixed(2)}</strong></td></tr>
+                        <tr><td>DG</td><td>${(grundpreisJahr/3).toFixed(2)}</td><td>${(kostenFrischDG*12).toFixed(2)}</td><td>${(kostenAbwDG*12).toFixed(2)}</td><td><strong>${(gesamtMonatDG*12).toFixed(2)}</strong></td></tr>
+                    </table>
+                </div>
+
+                <p class="info">Hinweis: Die Werte sind an deine swb-Rechnung angepasst.</p>
+            `;
+
+            document.getElementById('ergebnis').innerHTML = html;
         }
+
+        window.onload = berechne;
     </script>
 </body>
 </html>
