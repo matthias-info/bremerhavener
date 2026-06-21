@@ -8,16 +8,14 @@
         body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f9; font-size: 15px; }
         .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: #1e40af; text-align: center; }
-        h2 { color: #1e40af; margin: 20px 0 10px; }
         table { width: 100%; border-collapse: collapse; margin: 12px 0; }
         th, td { padding: 10px 8px; border: 1px solid #ccc; text-align: right; }
         th { background: #dbeafe; text-align: left; }
         input { width: 100%; padding: 9px; box-sizing: border-box; border-radius: 6px; font-size: 15px; }
-        input[readonly] { background: #f3f4f6; font-weight: bold; }
+        input[readonly] { background: #f3f4f6; font-weight: bold; color: #166534; }
         button { background: #1e40af; color: white; border: none; padding: 16px; font-size: 17px; width: 100%; border-radius: 8px; margin: 15px 0; cursor: pointer; }
-        .result { margin-top: 25px; padding: 20px; background: #f0fdf4; border: 3px solid #4ade80; border-radius: 12px; }
+        .result { margin-top: 25px; padding: 20px; background: #f0fdf4; border: 3px solid #4ade80; border-radius: 12px; overflow-x: auto; }
         .highlight { background: #fef3c7; font-weight: bold; }
-        .abrechnung { background: #f0f9ff; padding: 20px; border: 2px solid #3b82f6; border-radius: 10px; margin: 20px 0; }
     </style>
 </head>
 <body>
@@ -100,7 +98,7 @@
             const mieterOG = document.getElementById('mieter_og').value || "Wohnung OG";
             const mieterDG = document.getElementById('mieter_dg').value || "Wohnung DG";
 
-            // Bekannte Verbräuche
+            // Bekannte Jahresverbräuche
             const wmEG = parseFloat(document.getElementById('wm_eg').value) || 0;
             const wmOG = parseFloat(document.getElementById('wm_og').value) || 0;
             const wmDG = parseFloat(document.getElementById('wm_dg').value) || 0;
@@ -117,14 +115,18 @@
             const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
             const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
 
-            // Korrigierte Schätzung Spüle EG
-            const dailyOGk = tageOG > 0 ? spOGk / tageOG : 0;
-            const dailyOGw = tageOG > 0 ? spOGw / tageOG : 0;
-            const dailyDGk = tageDG > 0 ? spDGk / tageDG : 0;
-            const dailyDGw = tageDG > 0 ? spDGw / tageDG : 0;
+            // === KORRIGIERTE Schätzung Spüle EG ===
+            const presenceOG = tageOG * 12;                    // Tage OG im Jahr
+            const dailyOGk = presenceOG > 0 ? spOGk / presenceOG : 0;
+            const dailyOGw = presenceOG > 0 ? spOGw / presenceOG : 0;
+            const dailyDGk = spDGk / 365;
+            const dailyDGw = spDGw / 365;
 
-            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * 365;
-            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * 365;
+            const avgDailyK = (dailyDGk * 0.7 + dailyOGk * 0.3);
+            const avgDailyW = (dailyDGw * 0.7 + dailyOGw * 0.3);
+
+            const schaetzungEGk = avgDailyK * 365;
+            const schaetzungEGw = avgDailyW * 365;
             const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
 
             document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(2) + " m³";
