@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasserkosten-Verteiler (Jahresbasis)</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f9; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f9; font-size: 15px; }
         .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: #1e40af; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin: 12px 0; }
         th, td { padding: 9px 6px; border: 1px solid #ddd; text-align: right; }
         th { background: #dbeafe; text-align: left; }
-        input { width: 100%; padding: 9px; box-sizing: border-box; border-radius: 6px; }
-        input[readonly] { background: #f3f4f6; font-weight: bold; }
-        button { background: #1e40af; color: white; border: none; padding: 16px; font-size: 17px; width: 100%; border-radius: 8px; margin: 15px 0; }
+        input { width: 100%; padding: 9px; box-sizing: border-box; border-radius: 6px; font-size: 15px; }
+        input[readonly] { background: #f3f4f6; font-weight: bold; color: #1f2937; }
+        button { background: #1e40af; color: white; border: none; padding: 16px; font-size: 17px; width: 100%; border-radius: 8px; margin: 15px 0; cursor: pointer; }
         .result { margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #4ade80; border-radius: 10px; overflow-x: auto; }
         .highlight { background: #fef3c7; font-weight: bold; }
+        .error { color: #d32f2f; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧮 Wasserkosten-Verteiler</h1>
-        <p style="text-align:center;color:#d32f2f;"><strong>Alle Verbräuche = Jahreswerte (Zählerdifferenz)</strong></p>
+        <h1>🧮 Wasserkosten-Verteiler (Jahresbasis)</h1>
+        <p style="text-align:center; color:#d32f2f;"><strong>Alle Verbräuche = Jahreswerte (Zählerdifferenz)</strong></p>
 
         <h2>1. Rechnungssummen (€ pro Jahr)</h2>
         <table>
@@ -78,10 +79,10 @@
 
     <script>
         function berechne() {
+            const kaltGesamtJahr = parseFloat(document.getElementById('kalt_gesamt').value) || 0;
+            const grundpreisJahr = parseFloat(document.getElementById('grundpreis_jahr').value) || 0;
             const rechnungFrischJahr = parseFloat(document.getElementById('rechnung_frisch').value) || 0;
             const rechnungAbwasserJahr = parseFloat(document.getElementById('rechnung_abwasser').value) || 0;
-            const grundpreisJahr = parseFloat(document.getElementById('grundpreis_jahr').value) || 0;
-            const kaltGesamtJahr = parseFloat(document.getElementById('kalt_gesamt').value) || 0;
 
             let tageEG = Math.max(1, parseFloat(document.getElementById('tage_eg').value) || 30);
             let tageOG = Math.max(0, parseFloat(document.getElementById('tage_og').value) || 10);
@@ -104,19 +105,20 @@
             const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
             const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
 
-            // === Korrigierte Schätzung Spüle EG (Jahresbasis) ===
+            // === KORRIGIERTE Schätzung Spüle EG ===
             const dailyOGk = tageOG > 0 ? spOGk / tageOG : 0;
             const dailyOGw = tageOG > 0 ? spOGw / tageOG : 0;
             const dailyDGk = tageDG > 0 ? spDGk / tageDG : 0;
             const dailyDGw = tageDG > 0 ? spDGw / tageDG : 0;
 
-            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * (tageEG * 12);  // Tage pro Jahr
-            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * (tageEG * 12);
+            // Realistische Hochrechnung auf 365 Tage
+            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * 365;
+            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * 365;
             const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
 
             document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(2) + " m³";
 
-            // Rest der Berechnung...
+            // Weitere Berechnung...
             const bekanntEG = wmEG + wbEGk + wbEGw + schaetzungEGGesamt;
             const bekanntOG = wmOG + wbOGk + wbOGw + spOGk + spOGw;
             const bekanntDG = wmDG + wbDGk + wbDGw + spDGk + spDGw;
@@ -157,7 +159,6 @@
             const gesamtOG = kostenFrischOG + kostenAbwOG;
             const gesamtDG = kostenFrischDG + kostenAbwDG;
 
-            // Ausgabe
             let html = `
                 <h2>Ergebnis</h2>
                 <p><strong>Spüle EG geschätzt:</strong> ${schaetzungEGGesamt.toFixed(2)} m³</p>
