@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wasserkosten-Verteiler (Jahresbasis)</title>
+    <title>Wasserkosten-Verteiler + Nebenkostenabrechnung</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f9; font-size: 15px; }
         .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: #1e40af; text-align: center; }
+        h2 { color: #1e40af; margin: 20px 0 10px; }
         table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        th, td { padding: 9px 6px; border: 1px solid #ddd; text-align: right; }
+        th, td { padding: 10px 8px; border: 1px solid #ccc; text-align: right; }
         th { background: #dbeafe; text-align: left; }
         input { width: 100%; padding: 9px; box-sizing: border-box; border-radius: 6px; font-size: 15px; }
-        input[readonly] { background: #f3f4f6; font-weight: bold; color: #166534; }
+        input[readonly] { background: #f3f4f6; font-weight: bold; }
         button { background: #1e40af; color: white; border: none; padding: 16px; font-size: 17px; width: 100%; border-radius: 8px; margin: 15px 0; cursor: pointer; }
-        .result { margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #4ade80; border-radius: 10px; overflow-x: auto; }
+        .result { margin-top: 25px; padding: 20px; background: #f0fdf4; border: 3px solid #4ade80; border-radius: 12px; }
         .highlight { background: #fef3c7; font-weight: bold; }
+        .abrechnung { background: #f0f9ff; padding: 20px; border: 2px solid #3b82f6; border-radius: 10px; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧮 Wasserkosten-Verteiler (Jahresbasis)</h1>
+        <h1>🧮 Wasserkosten-Verteiler + Nebenkostenabrechnung</h1>
         <p style="text-align:center; color:#d32f2f;"><strong>Alle Verbräuche = Jahreswerte (Zählerdifferenz)</strong></p>
 
         <h2>1. Rechnungssummen (€ pro Jahr)</h2>
@@ -30,14 +32,21 @@
             <tr><td>Grundpreis Frischwasser / Jahr</td><td><input type="number" id="grundpreis_jahr" value="55.80" step="0.01"></td></tr>
         </table>
 
-        <h2>2. Anwesenheit pro Monat (Tage)</h2>
+        <h2>2. Mieter</h2>
+        <table>
+            <tr><td>EG</td><td><input type="text" id="mieter_eg" value="Mieter EG"></td></tr>
+            <tr><td>OG</td><td><input type="text" id="mieter_og" value="Mieter OG"></td></tr>
+            <tr><td>DG</td><td><input type="text" id="mieter_dg" value="Mieter DG"></td></tr>
+        </table>
+
+        <h2>3. Anwesenheit pro Monat (Tage)</h2>
         <table>
             <tr><td>EG</td><td><input type="number" id="tage_eg" value="30"></td></tr>
             <tr><td>OG</td><td><input type="number" id="tage_og" value="10"></td></tr>
             <tr><td>DG</td><td><input type="number" id="tage_dg" value="30"></td></tr>
         </table>
 
-        <h2>3. Verbräuche (m³ pro Jahr)</h2>
+        <h2>4. Verbräuche (m³ pro Jahr)</h2>
         <table>
             <tr><td>Haus Kaltwasser gesamt</td><td><input type="number" id="kalt_gesamt" value="50" step="0.01"></td></tr>
         </table>
@@ -71,7 +80,7 @@
             </tr>
         </table>
 
-        <button onclick="berechne()">💰 Berechnen</button>
+        <button onclick="berechne()">💰 Berechnen & Abrechnung erstellen</button>
 
         <div id="ergebnis" class="result"></div>
     </div>
@@ -87,7 +96,11 @@
             let tageOG = Math.max(0, parseFloat(document.getElementById('tage_og').value) || 10);
             let tageDG = Math.max(1, parseFloat(document.getElementById('tage_dg').value) || 30);
 
-            // Bekannte Jahresverbräuche
+            const mieterEG = document.getElementById('mieter_eg').value || "Wohnung EG";
+            const mieterOG = document.getElementById('mieter_og').value || "Wohnung OG";
+            const mieterDG = document.getElementById('mieter_dg').value || "Wohnung DG";
+
+            // Bekannte Verbräuche
             const wmEG = parseFloat(document.getElementById('wm_eg').value) || 0;
             const wmOG = parseFloat(document.getElementById('wm_og').value) || 0;
             const wmDG = parseFloat(document.getElementById('wm_dg').value) || 0;
@@ -104,13 +117,14 @@
             const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
             const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
 
-            // === KORRIGIERTE & REALISTISCHE Schätzung Spüle EG ===
-            // OG auf volle 365 Tage hochrechnen + Durchschnitt mit DG
-            const ogScaledK = tageOG > 0 ? spOGk * (365 / (tageOG * 30)) : 0;   // auf Jahresbasis skalieren
-            const ogScaledW = tageOG > 0 ? spOGw * (365 / (tageOG * 30)) : 0;
+            // Korrigierte Schätzung Spüle EG
+            const dailyOGk = tageOG > 0 ? spOGk / tageOG : 0;
+            const dailyOGw = tageOG > 0 ? spOGw / tageOG : 0;
+            const dailyDGk = tageDG > 0 ? spDGk / tageDG : 0;
+            const dailyDGw = tageDG > 0 ? spDGw / tageDG : 0;
 
-            const schaetzungEGk = (ogScaledK + spDGk) / 2;
-            const schaetzungEGw = (ogScaledW + spDGw) / 2;
+            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * 365;
+            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * 365;
             const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
 
             document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(2) + " m³";
@@ -157,14 +171,25 @@
             const gesamtDG = kostenFrischDG + kostenAbwDG;
 
             let html = `
-                <h2>Ergebnis</h2>
-                <p><strong>Spüle EG geschätzt:</strong> ${schaetzungEGGesamt.toFixed(2)} m³</p>
-                <table>
-                    <tr><th>Wohnung</th><th>Gesamt m³/Jahr</th><th>Frischwasser €</th><th>Abwasser €</th><th><strong>Gesamt €</strong></th></tr>
-                    <tr><td>EG</td><td>${totalEG.toFixed(2)}</td><td>${kostenFrischEG.toFixed(2)}</td><td>${kostenAbwEG.toFixed(2)}</td><td><strong>${gesamtEG.toFixed(2)}</strong></td></tr>
-                    <tr><td>OG</td><td>${totalOG.toFixed(2)}</td><td>${kostenFrischOG.toFixed(2)}</td><td>${kostenAbwOG.toFixed(2)}</td><td><strong>${gesamtOG.toFixed(2)}</strong></td></tr>
-                    <tr><td>DG</td><td>${totalDG.toFixed(2)}</td><td>${kostenFrischDG.toFixed(2)}</td><td>${kostenAbwDG.toFixed(2)}</td><td><strong>${gesamtDG.toFixed(2)}</strong></td></tr>
-                </table>
+                <h2>Nebenkostenabrechnung Wasser ${new Date().getFullYear()}</h2>
+                
+                <div class="result">
+                    <h3>1. Verbrauchsübersicht (Jahr)</h3>
+                    <table>
+                        <tr><th>Wohnung</th><th>Bekannt + Schätzung</th><th>Unbekannt</th><th><strong>Gesamt m³</strong></th><th>Anteil</th></tr>
+                        <tr><td>EG</td><td>${bekanntEG.toFixed(2)}</td><td>${unbekEG.toFixed(2)}</td><td><strong>${totalEG.toFixed(2)}</strong></td><td>${(anteilEG*100).toFixed(1)} %</td></tr>
+                        <tr><td>OG</td><td>${bekanntOG.toFixed(2)}</td><td>${unbekOG.toFixed(2)}</td><td><strong>${totalOG.toFixed(2)}</strong></td><td>${(anteilOG*100).toFixed(1)} %</td></tr>
+                        <tr><td>DG</td><td>${bekanntDG.toFixed(2)}</td><td>${unbekDG.toFixed(2)}</td><td><strong>${totalDG.toFixed(2)}</strong></td><td>${(anteilDG*100).toFixed(1)} %</td></tr>
+                    </table>
+
+                    <h3>2. Kostenverteilung (Jahr)</h3>
+                    <table>
+                        <tr><th>Wohnung</th><th>Mieter</th><th>Grundpreis</th><th>Frischwasser</th><th>Abwasser</th><th><strong>Gesamt</strong></th></tr>
+                        <tr><td>EG</td><td>${mieterEG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischEG.toFixed(2)}</td><td>${kostenAbwEG.toFixed(2)}</td><td><strong>${gesamtEG.toFixed(2)}</strong></td></tr>
+                        <tr><td>OG</td><td>${mieterOG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischOG.toFixed(2)}</td><td>${kostenAbwOG.toFixed(2)}</td><td><strong>${gesamtOG.toFixed(2)}</strong></td></tr>
+                        <tr><td>DG</td><td>${mieterDG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischDG.toFixed(2)}</td><td>${kostenAbwDG.toFixed(2)}</td><td><strong>${gesamtDG.toFixed(2)}</strong></td></tr>
+                    </table>
+                </div>
             `;
 
             document.getElementById('ergebnis').innerHTML = html;
