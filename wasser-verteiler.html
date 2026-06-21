@@ -44,34 +44,34 @@
             <tr><td>DG</td><td><input type="number" id="tage_dg" value="30"></td></tr>
         </table>
 
-        <h2>4. Verbräuche (m³ pro Jahr)</h2>
+        <h2>4. Verbräuche (m³ pro Jahr) – realistische Beispiele</h2>
         <table>
             <tr><td>Haus Kaltwasser gesamt</td><td><input type="number" id="kalt_gesamt" value="50" step="0.01"></td></tr>
         </table>
 
         <h3>Waschmaschinen (Jahr)</h3>
         <table>
-            <tr><td>EG</td><td><input type="number" id="wm_eg" value="50" step="0.01"></td></tr>
-            <tr><td>OG</td><td><input type="number" id="wm_og" value="13" step="0.01"></td></tr>
-            <tr><td>DG</td><td><input type="number" id="wm_dg" value="58" step="0.01"></td></tr>
+            <tr><td>EG</td><td><input type="number" id="wm_eg" value="12" step="0.01"></td></tr>
+            <tr><td>OG</td><td><input type="number" id="wm_og" value="5" step="0.01"></td></tr>
+            <tr><td>DG</td><td><input type="number" id="wm_dg" value="15" step="0.01"></td></tr>
         </table>
 
         <h3>Waschbecken (Jahr)</h3>
         <table>
-            <tr><td>EG kalt</td><td><input type="number" id="wb_eg_k" value="13" step="0.01"></td></tr>
-            <tr><td>EG warm</td><td><input type="number" id="wb_eg_w" value="10" step="0.01"></td></tr>
-            <tr><td>OG kalt</td><td><input type="number" id="wb_og_k" value="4" step="0.01"></td></tr>
-            <tr><td>OG warm</td><td><input type="number" id="wb_og_w" value="3" step="0.01"></td></tr>
-            <tr><td>DG kalt</td><td><input type="number" id="wb_dg_k" value="16" step="0.01"></td></tr>
-            <tr><td>DG warm</td><td><input type="number" id="wb_dg_w" value="11" step="0.01"></td></tr>
+            <tr><td>EG kalt</td><td><input type="number" id="wb_eg_k" value="7" step="0.01"></td></tr>
+            <tr><td>EG warm</td><td><input type="number" id="wb_eg_w" value="5" step="0.01"></td></tr>
+            <tr><td>OG kalt</td><td><input type="number" id="wb_og_k" value="3" step="0.01"></td></tr>
+            <tr><td>OG warm</td><td><input type="number" id="wb_og_w" value="2" step="0.01"></td></tr>
+            <tr><td>DG kalt</td><td><input type="number" id="wb_dg_k" value="8" step="0.01"></td></tr>
+            <tr><td>DG warm</td><td><input type="number" id="wb_dg_w" value="6" step="0.01"></td></tr>
         </table>
 
         <h3>Spülen (Jahr)</h3>
         <table>
             <tr><td>OG kalt</td><td><input type="number" id="sp_og_k" value="11" step="0.01"></td></tr>
             <tr><td>OG warm</td><td><input type="number" id="sp_og_w" value="8" step="0.01"></td></tr>
-            <tr><td>DG kalt</td><td><input type="number" id="sp_dg_k" value="34" step="0.01"></td></tr>
-            <tr><td>DG warm</td><td><input type="number" id="sp_dg_w" value="25" step="0.01"></td></tr>
+            <tr><td>DG kalt</td><td><input type="number" id="sp_dg_k" value="28" step="0.01"></td></tr>
+            <tr><td>DG warm</td><td><input type="number" id="sp_dg_w" value="20" step="0.01"></td></tr>
             <tr>
                 <td><strong>Spüle EG (geschätzt pro Jahr)</strong></td>
                 <td><input type="text" id="sp_eg_schaetzung" readonly></td>
@@ -115,18 +115,14 @@
             const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
             const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
 
-            // Korrigierte realistische Schätzung Spüle EG
-            const daysOG = tageOG * 12; // ca. Tage im Jahr
-            const dailyOGk = daysOG > 0 ? spOGk / daysOG : 0;
-            const dailyOGw = daysOG > 0 ? spOGw / daysOG : 0;
-            const dailyDGk = spDGk / 365;
-            const dailyDGw = spDGw / 365;
+            // Realistische Schätzung Spüle EG
+            const dailyOGk = tageOG > 0 ? spOGk / tageOG : 0;
+            const dailyOGw = tageOG > 0 ? spOGw / tageOG : 0;
+            const dailyDGk = tageDG > 0 ? spDGk / tageDG : 0;
+            const dailyDGw = tageDG > 0 ? spDGw / tageDG : 0;
 
-            const avgDailyK = (dailyDGk * 0.7 + dailyOGk * 0.3);
-            const avgDailyW = (dailyDGw * 0.7 + dailyOGw * 0.3);
-
-            const schaetzungEGk = avgDailyK * 365;
-            const schaetzungEGw = avgDailyW * 365;
+            const schaetzungEGk = (dailyDGk * 0.7 + dailyOGk * 0.3) * 365;
+            const schaetzungEGw = (dailyDGw * 0.7 + dailyOGw * 0.3) * 365;
             const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
 
             document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(2) + " m³";
