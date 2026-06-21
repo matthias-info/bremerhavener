@@ -1,197 +1,398 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wasserkosten-Verteiler + Nebenkostenabrechnung</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f9; font-size: 15px; }
-        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #1e40af; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        th, td { padding: 10px 8px; border: 1px solid #ccc; text-align: right; }
-        th { background: #dbeafe; text-align: left; }
-        input { width: 100%; padding: 9px; box-sizing: border-box; border-radius: 6px; font-size: 15px; }
-        input[readonly] { background: #f3f4f6; font-weight: bold; color: #166534; }
-        button { background: #1e40af; color: white; border: none; padding: 16px; font-size: 17px; width: 100%; border-radius: 8px; margin: 15px 0; cursor: pointer; }
-        .result { margin-top: 25px; padding: 20px; background: #f0fdf4; border: 3px solid #4ade80; border-radius: 12px; overflow-x: auto; }
-        .highlight { background: #fef3c7; font-weight: bold; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wasserkosten-Verteiler</title>
+  <style>
+    :root {
+      --bg: #f4f7f9;
+      --panel: #ffffff;
+      --line: #cfd8e3;
+      --head: #dbeafe;
+      --text: #17202a;
+      --muted: #5f6f82;
+      --accent: #1e40af;
+      --ok: #166534;
+      --warn: #92400e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: var(--panel);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      margin: 8px 0 10px;
+      color: var(--accent);
+      text-align: center;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin: 22px 0 8px;
+      font-size: 20px;
+    }
+
+    h3 {
+      margin: 16px 0 6px;
+      font-size: 17px;
+    }
+
+    p {
+      margin: 8px 0;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+
+    th, td {
+      padding: 9px 8px;
+      border: 1px solid var(--line);
+      text-align: right;
+      vertical-align: middle;
+    }
+
+    th {
+      background: var(--head);
+      text-align: left;
+    }
+
+    td:first-child, th:first-child {
+      text-align: left;
+    }
+
+    input {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px;
+      border: 1px solid #b8c2cf;
+      border-radius: 6px;
+      font: inherit;
+      text-align: right;
+    }
+
+    input[type="text"] { text-align: left; }
+
+    input[readonly] {
+      background: #f3f4f6;
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    button {
+      width: 100%;
+      margin: 16px 0 8px;
+      padding: 15px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(0.96); }
+
+    .note {
+      color: #b91c1c;
+      text-align: center;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f0fdf4;
+      border: 3px solid #4ade80;
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+
+    .warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .total {
+      font-weight: 700;
+      background: #fef3c7;
+    }
+
+    @media (max-width: 760px) {
+      body { padding: 6px; }
+      .container { padding: 10px; }
+      th, td { padding: 7px 5px; font-size: 13px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧮 Wasserkosten-Verteiler + Nebenkostenabrechnung</h1>
-        <p style="text-align:center; color:#d32f2f;"><strong>Alle Verbräuche = Jahreswerte (Zählerdifferenz)</strong></p>
+  <div class="container">
+    <h1>Wasserkosten-Verteiler</h1>
+    <p class="note"><strong>Alle Verbräuche = Jahreswerte in m³</strong></p>
 
-        <h2>1. Rechnungssummen (€ pro Jahr)</h2>
+    <h2>1. Rechnungssummen pro Jahr</h2>
+    <table>
+      <tr><td>Frischwasser gesamt inkl. Grundpreis (€)</td><td><input type="number" id="rechnung_frisch" value="187.38" step="0.01"></td></tr>
+      <tr><td>Abwasser gesamt (€)</td><td><input type="number" id="rechnung_abwasser" value="146.50" step="0.01"></td></tr>
+      <tr><td>Grundpreis Frischwasser (€)</td><td><input type="number" id="grundpreis_jahr" value="55.80" step="0.01"></td></tr>
+    </table>
+
+    <h2>2. Mieter</h2>
+    <table>
+      <tr><td>EG</td><td><input type="text" id="mieter_eg" value="Mieter EG"></td></tr>
+      <tr><td>OG</td><td><input type="text" id="mieter_og" value="Mieter OG"></td></tr>
+      <tr><td>DG</td><td><input type="text" id="mieter_dg" value="Mieter DG"></td></tr>
+    </table>
+
+    <h2>3. Anwesenheit pro Monat</h2>
+    <table>
+      <tr><td>EG Tage</td><td><input type="number" id="tage_eg" value="30" step="1"></td></tr>
+      <tr><td>OG Tage</td><td><input type="number" id="tage_og" value="10" step="1"></td></tr>
+      <tr><td>DG Tage</td><td><input type="number" id="tage_dg" value="30" step="1"></td></tr>
+    </table>
+
+    <h2>4. Verbrauchswerte pro Jahr</h2>
+    <table>
+      <tr><td>Haus Kaltwasser gesamt</td><td><input type="number" id="kalt_gesamt" value="50" step="0.01"></td></tr>
+    </table>
+
+    <h3>Waschmaschinen</h3>
+    <table>
+      <tr><td>EG</td><td><input type="number" id="wm_eg" value="9" step="0.01"></td></tr>
+      <tr><td>OG</td><td><input type="number" id="wm_og" value="4" step="0.01"></td></tr>
+      <tr><td>DG</td><td><input type="number" id="wm_dg" value="11" step="0.01"></td></tr>
+    </table>
+
+    <h3>Waschbecken</h3>
+    <table>
+      <tr><td>EG kalt</td><td><input type="number" id="wb_eg_k" value="1.2" step="0.01"></td></tr>
+      <tr><td>EG warm</td><td><input type="number" id="wb_eg_w" value="0.8" step="0.01"></td></tr>
+      <tr><td>OG kalt</td><td><input type="number" id="wb_og_k" value="0.4" step="0.01"></td></tr>
+      <tr><td>OG warm</td><td><input type="number" id="wb_og_w" value="0.3" step="0.01"></td></tr>
+      <tr><td>DG kalt</td><td><input type="number" id="wb_dg_k" value="1.4" step="0.01"></td></tr>
+      <tr><td>DG warm</td><td><input type="number" id="wb_dg_w" value="1.0" step="0.01"></td></tr>
+    </table>
+
+    <h3>Spülen</h3>
+    <table>
+      <tr><td>OG kalt</td><td><input type="number" id="sp_og_k" value="1.8" step="0.01"></td></tr>
+      <tr><td>OG warm</td><td><input type="number" id="sp_og_w" value="1.2" step="0.01"></td></tr>
+      <tr><td>DG kalt</td><td><input type="number" id="sp_dg_k" value="4.4" step="0.01"></td></tr>
+      <tr><td>DG warm</td><td><input type="number" id="sp_dg_w" value="3.2" step="0.01"></td></tr>
+      <tr><td><strong>EG automatisch</strong><br><span class="hint">Aus dem Restverbrauch mitgeschätzt</span></td><td><input type="text" id="sp_eg_schaetzung" readonly></td></tr>
+    </table>
+
+    <h3>WC</h3>
+    <table>
+      <tr><td>EG automatisch</td><td><input type="text" id="wc_eg" readonly></td></tr>
+      <tr><td>OG automatisch</td><td><input type="text" id="wc_og" readonly></td></tr>
+      <tr><td>DG automatisch</td><td><input type="text" id="wc_dg" readonly></td></tr>
+    </table>
+
+    <h3>Dusche</h3>
+    <table>
+      <tr><td>EG automatisch</td><td><input type="text" id="dusche_eg" readonly></td></tr>
+      <tr><td>OG automatisch</td><td><input type="text" id="dusche_og" readonly></td></tr>
+      <tr><td>DG automatisch</td><td><input type="text" id="dusche_dg" readonly></td></tr>
+    </table>
+
+    <button type="button" onclick="berechne()">Berechnen & Abrechnung erstellen</button>
+
+    <div id="ergebnis" class="result"></div>
+  </div>
+
+  <script>
+    const WC_NORMALVERBRAUCH_PRO_TAG = 0.04;
+    const DUSCHE_NORMALVERBRAUCH_PRO_TAG = 0.07;
+
+    function wert(id) {
+      return Number.parseFloat(String(document.getElementById(id).value).replace(",", ".")) || 0;
+    }
+
+    function text(id, fallback) {
+      return document.getElementById(id).value.trim() || fallback;
+    }
+
+    function euro(value) {
+      return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(value || 0);
+    }
+
+    function zahl(value) {
+      return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0);
+    }
+
+    function anteil(value) {
+      return new Intl.NumberFormat("de-DE", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value || 0);
+    }
+
+    function schaetzeEGSpuele(og, dg, tageEG, tageOG, tageDG) {
+      const ogAufEG = tageOG > 0 ? og / tageOG * tageEG : 0;
+      const dgAufEG = tageDG > 0 ? dg / tageDG * tageEG : 0;
+      return 0.3 * ogAufEG + 0.7 * dgAufEG;
+    }
+
+    function setzeBerechnet(id, value) {
+      document.getElementById(id).value = `${zahl(value)} m³`;
+    }
+
+    function berechne() {
+      const kaltGesamt = wert("kalt_gesamt");
+      const rechnungFrisch = wert("rechnung_frisch");
+      const rechnungAbwasser = wert("rechnung_abwasser");
+      const grundpreis = Math.min(wert("grundpreis_jahr"), rechnungFrisch);
+
+      const tage = {
+        EG: Math.max(0, wert("tage_eg")),
+        OG: Math.max(0, wert("tage_og")),
+        DG: Math.max(0, wert("tage_dg"))
+      };
+
+      const mieter = {
+        EG: text("mieter_eg", "Wohnung EG"),
+        OG: text("mieter_og", "Wohnung OG"),
+        DG: text("mieter_dg", "Wohnung DG")
+      };
+
+      const bekannt = {
+        EG: wert("wm_eg") + wert("wb_eg_k") + wert("wb_eg_w"),
+        OG: wert("wm_og") + wert("wb_og_k") + wert("wb_og_w") + wert("sp_og_k") + wert("sp_og_w"),
+        DG: wert("wm_dg") + wert("wb_dg_k") + wert("wb_dg_w") + wert("sp_dg_k") + wert("sp_dg_w")
+      };
+
+      const summeBekannt = bekannt.EG + bekannt.OG + bekannt.DG;
+      const restVerbrauch = Math.max(0, kaltGesamt - summeBekannt);
+
+      const spEGBasis = schaetzeEGSpuele(
+        wert("sp_og_k") + wert("sp_og_w"),
+        wert("sp_dg_k") + wert("sp_dg_w"),
+        tage.EG,
+        tage.OG,
+        tage.DG
+      );
+      const spEG = Math.min(spEGBasis, restVerbrauch);
+      const restNachSpuele = Math.max(0, restVerbrauch - spEG);
+      const automatischBasis = {
+        wcEG: tage.EG * 12 * WC_NORMALVERBRAUCH_PRO_TAG,
+        wcOG: tage.OG * 12 * WC_NORMALVERBRAUCH_PRO_TAG,
+        wcDG: tage.DG * 12 * WC_NORMALVERBRAUCH_PRO_TAG,
+        duscheEG: tage.EG * 12 * DUSCHE_NORMALVERBRAUCH_PRO_TAG,
+        duscheOG: tage.OG * 12 * DUSCHE_NORMALVERBRAUCH_PRO_TAG,
+        duscheDG: tage.DG * 12 * DUSCHE_NORMALVERBRAUCH_PRO_TAG
+      };
+      const basisGesamt = automatischBasis.wcEG + automatischBasis.wcOG + automatischBasis.wcDG + automatischBasis.duscheEG + automatischBasis.duscheOG + automatischBasis.duscheDG;
+      const automatisch = {
+        spEG,
+        wcEG: basisGesamt > 0 ? restNachSpuele * automatischBasis.wcEG / basisGesamt : restNachSpuele / 6,
+        wcOG: basisGesamt > 0 ? restNachSpuele * automatischBasis.wcOG / basisGesamt : restNachSpuele / 6,
+        wcDG: basisGesamt > 0 ? restNachSpuele * automatischBasis.wcDG / basisGesamt : restNachSpuele / 6,
+        duscheEG: basisGesamt > 0 ? restNachSpuele * automatischBasis.duscheEG / basisGesamt : restNachSpuele / 6,
+        duscheOG: basisGesamt > 0 ? restNachSpuele * automatischBasis.duscheOG / basisGesamt : restNachSpuele / 6,
+        duscheDG: basisGesamt > 0 ? restNachSpuele * automatischBasis.duscheDG / basisGesamt : restNachSpuele / 6
+      };
+
+      setzeBerechnet("sp_eg_schaetzung", automatisch.spEG);
+      setzeBerechnet("wc_eg", automatisch.wcEG);
+      setzeBerechnet("wc_og", automatisch.wcOG);
+      setzeBerechnet("wc_dg", automatisch.wcDG);
+      setzeBerechnet("dusche_eg", automatisch.duscheEG);
+      setzeBerechnet("dusche_og", automatisch.duscheOG);
+      setzeBerechnet("dusche_dg", automatisch.duscheDG);
+
+      if (summeBekannt > kaltGesamt) {
+        document.getElementById("ergebnis").innerHTML = `
+          <h2>Berechnung nicht möglich</h2>
+          <p class="warn">Die bekannten Eingaben ergeben ${zahl(summeBekannt)} m³. Der Hauszähler zeigt aber nur ${zahl(kaltGesamt)} m³. Bitte zuerst die bekannten Verbrauchswerte prüfen.</p>
+          <table>
+            <tr><th>Wohnung</th><th>Bekannt eingegeben</th><th>WC/Dusche/Spüle automatisch</th></tr>
+            <tr><td>EG</td><td>${zahl(bekannt.EG)} m³</td><td>0,00 m³</td></tr>
+            <tr><td>OG</td><td>${zahl(bekannt.OG)} m³</td><td>0,00 m³</td></tr>
+            <tr><td>DG</td><td>${zahl(bekannt.DG)} m³</td><td>0,00 m³</td></tr>
+            <tr class="total"><td>Summe</td><td>${zahl(summeBekannt)} m³</td><td>0,00 m³</td></tr>
+          </table>
+        `;
+        return;
+      }
+
+      const unbekannt = {
+        EG: automatisch.spEG + automatisch.wcEG + automatisch.duscheEG,
+        OG: automatisch.wcOG + automatisch.duscheOG,
+        DG: automatisch.wcDG + automatisch.duscheDG
+      };
+
+      const gesamt = {
+        EG: bekannt.EG + unbekannt.EG,
+        OG: bekannt.OG + unbekannt.OG,
+        DG: bekannt.DG + unbekannt.DG
+      };
+      const gesamtVerteilt = gesamt.EG + gesamt.OG + gesamt.DG || 1;
+      const verbrauchsAnteil = {
+        EG: gesamt.EG / gesamtVerteilt,
+        OG: gesamt.OG / gesamtVerteilt,
+        DG: gesamt.DG / gesamtVerteilt
+      };
+
+      const variableKosten = Math.max(0, rechnungFrisch - grundpreis) + rechnungAbwasser;
+      const grundpreisProWohnung = grundpreis / 3;
+      const kosten = {
+        EG: grundpreisProWohnung + variableKosten * verbrauchsAnteil.EG,
+        OG: grundpreisProWohnung + variableKosten * verbrauchsAnteil.OG,
+        DG: grundpreisProWohnung + variableKosten * verbrauchsAnteil.DG
+      };
+
+      document.getElementById("ergebnis").innerHTML = `
+        <h2>Nebenkostenabrechnung Wasser ${new Date().getFullYear()}</h2>
+        <h3>Verbrauchsübersicht</h3>
         <table>
-            <tr><td>Frischwasser gesamt (inkl. Grundpreis)</td><td><input type="number" id="rechnung_frisch" value="187.38" step="0.01"></td></tr>
-            <tr><td>Abwasser gesamt</td><td><input type="number" id="rechnung_abwasser" value="146.50" step="0.01"></td></tr>
-            <tr><td>Grundpreis Frischwasser / Jahr</td><td><input type="number" id="grundpreis_jahr" value="55.80" step="0.01"></td></tr>
+          <tr><th>Wohnung</th><th>Bekannt eingegeben</th><th>WC/Dusche/Spüle automatisch</th><th>Gesamt</th><th>Anteil</th></tr>
+          <tr><td>EG</td><td>${zahl(bekannt.EG)} m³</td><td>${zahl(unbekannt.EG)} m³</td><td><strong>${zahl(gesamt.EG)} m³</strong></td><td>${anteil(verbrauchsAnteil.EG)}</td></tr>
+          <tr><td>OG</td><td>${zahl(bekannt.OG)} m³</td><td>${zahl(unbekannt.OG)} m³</td><td><strong>${zahl(gesamt.OG)} m³</strong></td><td>${anteil(verbrauchsAnteil.OG)}</td></tr>
+          <tr><td>DG</td><td>${zahl(bekannt.DG)} m³</td><td>${zahl(unbekannt.DG)} m³</td><td><strong>${zahl(gesamt.DG)} m³</strong></td><td>${anteil(verbrauchsAnteil.DG)}</td></tr>
+          <tr class="total"><td>Summe</td><td>${zahl(summeBekannt)} m³</td><td>${zahl(restVerbrauch)} m³</td><td>${zahl(gesamtVerteilt)} m³</td><td>100,0 %</td></tr>
         </table>
 
-        <h2>2. Mieter</h2>
+        <h3>Kostenverteilung</h3>
         <table>
-            <tr><td>EG</td><td><input type="text" id="mieter_eg" value="Mieter EG"></td></tr>
-            <tr><td>OG</td><td><input type="text" id="mieter_og" value="Mieter OG"></td></tr>
-            <tr><td>DG</td><td><input type="text" id="mieter_dg" value="Mieter DG"></td></tr>
+          <tr><th>Wohnung</th><th>Mieter</th><th>Grundpreis</th><th>Verbrauch + Abwasser</th><th>Gesamt</th></tr>
+          <tr><td>EG</td><td>${mieter.EG}</td><td>${euro(grundpreisProWohnung)}</td><td>${euro(variableKosten * verbrauchsAnteil.EG)}</td><td><strong>${euro(kosten.EG)}</strong></td></tr>
+          <tr><td>OG</td><td>${mieter.OG}</td><td>${euro(grundpreisProWohnung)}</td><td>${euro(variableKosten * verbrauchsAnteil.OG)}</td><td><strong>${euro(kosten.OG)}</strong></td></tr>
+          <tr><td>DG</td><td>${mieter.DG}</td><td>${euro(grundpreisProWohnung)}</td><td>${euro(variableKosten * verbrauchsAnteil.DG)}</td><td><strong>${euro(kosten.DG)}</strong></td></tr>
         </table>
+      `;
+    }
 
-        <h2>3. Anwesenheit pro Monat (Tage)</h2>
-        <table>
-            <tr><td>EG</td><td><input type="number" id="tage_eg" value="30"></td></tr>
-            <tr><td>OG</td><td><input type="number" id="tage_og" value="10"></td></tr>
-            <tr><td>DG</td><td><input type="number" id="tage_dg" value="30"></td></tr>
-        </table>
+    document.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", berechne);
+    });
 
-        <h2>4. Verbräuche (m³ pro Jahr)</h2>
-        <table>
-            <tr><td>Haus Kaltwasser gesamt</td><td><input type="number" id="kalt_gesamt" value="50" step="0.01"></td></tr>
-        </table>
-
-        <h3>Waschmaschinen (Jahr)</h3>
-        <table>
-            <tr><td>EG</td><td><input type="number" id="wm_eg" value="9" step="0.01"></td></tr>
-            <tr><td>OG</td><td><input type="number" id="wm_og" value="4" step="0.01"></td></tr>
-            <tr><td>DG</td><td><input type="number" id="wm_dg" value="11" step="0.01"></td></tr>
-        </table>
-
-        <h3>Waschbecken (Jahr)</h3>
-        <table>
-            <tr><td>EG kalt</td><td><input type="number" id="wb_eg_k" value="6" step="0.01"></td></tr>
-            <tr><td>EG warm</td><td><input type="number" id="wb_eg_w" value="4" step="0.01"></td></tr>
-            <tr><td>OG kalt</td><td><input type="number" id="wb_og_k" value="2.5" step="0.01"></td></tr>
-            <tr><td>OG warm</td><td><input type="number" id="wb_og_w" value="2" step="0.01"></td></tr>
-            <tr><td>DG kalt</td><td><input type="number" id="wb_dg_k" value="7" step="0.01"></td></tr>
-            <tr><td>DG warm</td><td><input type="number" id="wb_dg_w" value="5" step="0.01"></td></tr>
-        </table>
-
-        <h3>Spülen (Jahr)</h3>
-        <table>
-            <tr><td>OG kalt</td><td><input type="number" id="sp_og_k" value="9" step="0.01"></td></tr>
-            <tr><td>OG warm</td><td><input type="number" id="sp_og_w" value="6" step="0.01"></td></tr>
-            <tr><td>DG kalt</td><td><input type="number" id="sp_dg_k" value="22" step="0.01"></td></tr>
-            <tr><td>DG warm</td><td><input type="number" id="sp_dg_w" value="16" step="0.01"></td></tr>
-            <tr>
-                <td><strong>Spüle EG (geschätzt pro Jahr)</strong></td>
-                <td><input type="text" id="sp_eg_schaetzung" readonly></td>
-            </tr>
-        </table>
-
-        <button onclick="berechne()">💰 Berechnen & Abrechnung erstellen</button>
-
-        <div id="ergebnis" class="result"></div>
-    </div>
-
-    <script>
-        function berechne() {
-            const kaltGesamtJahr = parseFloat(document.getElementById('kalt_gesamt').value) || 0;
-            const grundpreisJahr = parseFloat(document.getElementById('grundpreis_jahr').value) || 0;
-            const rechnungFrischJahr = parseFloat(document.getElementById('rechnung_frisch').value) || 0;
-            const rechnungAbwasserJahr = parseFloat(document.getElementById('rechnung_abwasser').value) || 0;
-
-            let tageEG = Math.max(1, parseFloat(document.getElementById('tage_eg').value) || 30);
-            let tageOG = Math.max(0, parseFloat(document.getElementById('tage_og').value) || 10);
-            let tageDG = Math.max(1, parseFloat(document.getElementById('tage_dg').value) || 30);
-
-            const mieterEG = document.getElementById('mieter_eg').value || "Wohnung EG";
-            const mieterOG = document.getElementById('mieter_og').value || "Wohnung OG";
-            const mieterDG = document.getElementById('mieter_dg').value || "Wohnung DG";
-
-            // Bekannte Verbräuche
-            const wmEG = parseFloat(document.getElementById('wm_eg').value) || 0;
-            const wmOG = parseFloat(document.getElementById('wm_og').value) || 0;
-            const wmDG = parseFloat(document.getElementById('wm_dg').value) || 0;
-
-            const wbEGk = parseFloat(document.getElementById('wb_eg_k').value) || 0;
-            const wbEGw = parseFloat(document.getElementById('wb_eg_w').value) || 0;
-            const wbOGk = parseFloat(document.getElementById('wb_og_k').value) || 0;
-            const wbOGw = parseFloat(document.getElementById('wb_og_w').value) || 0;
-            const wbDGk = parseFloat(document.getElementById('wb_dg_k').value) || 0;
-            const wbDGw = parseFloat(document.getElementById('wb_dg_w').value) || 0;
-
-            const spOGk = parseFloat(document.getElementById('sp_og_k').value) || 0;
-            const spOGw = parseFloat(document.getElementById('sp_og_w').value) || 0;
-            const spDGk = parseFloat(document.getElementById('sp_dg_k').value) || 0;
-            const spDGw = parseFloat(document.getElementById('sp_dg_w').value) || 0;
-
-            // === Einfache & realistische Schätzung Spüle EG ===
-            const scaledOGk = tageOG > 0 ? spOGk * (30 / tageOG) : spOGk;
-            const scaledOGw = tageOG > 0 ? spOGw * (30 / tageOG) : spOGw;
-
-            const schaetzungEGk = (scaledOGk + spDGk) / 2;
-            const schaetzungEGw = (scaledOGw + spDGw) / 2;
-            const schaetzungEGGesamt = schaetzungEGk + schaetzungEGw;
-
-            document.getElementById('sp_eg_schaetzung').value = schaetzungEGGesamt.toFixed(2) + " m³";
-
-            // Bekannte + geschätzt
-            const bekanntEG = wmEG + wbEGk + wbEGw + schaetzungEGGesamt;
-            const bekanntOG = wmOG + wbOGk + wbOGw + spOGk + spOGw;
-            const bekanntDG = wmDG + wbDGk + wbDGw + spDGk + spDGw;
-
-            const summeBekannt = bekanntEG + bekanntOG + bekanntDG;
-            const unbekanntJahr = Math.max(0, kaltGesamtJahr - summeBekannt);
-
-            const tageGesamtMonat = tageEG + tageOG + tageDG;
-            const fEG = tageGesamtMonat > 0 ? tageEG / tageGesamtMonat : 0;
-            const fOG = tageGesamtMonat > 0 ? tageOG / tageGesamtMonat : 0;
-            const fDG = tageGesamtMonat > 0 ? tageDG / tageGesamtMonat : 0;
-
-            const unbekEG = unbekanntJahr * fEG;
-            const unbekOG = unbekanntJahr * fOG;
-            const unbekDG = unbekanntJahr * fDG;
-
-            const totalEG = bekanntEG + unbekEG;
-            const totalOG = bekanntOG + unbekOG;
-            const totalDG = bekanntDG + unbekDG;
-            const totalGesamt = totalEG + totalOG + totalDG;
-
-            const anteilEG = totalGesamt > 0 ? totalEG / totalGesamt : 0;
-            const anteilOG = totalGesamt > 0 ? totalOG / totalGesamt : 0;
-            const anteilDG = totalGesamt > 0 ? totalDG / totalGesamt : 0;
-
-            const variableFrischJahr = Math.max(0, rechnungFrischJahr - grundpreisJahr);
-            const grundProPerson = grundpreisJahr / 3;
-
-            const kostenFrischEG = grundProPerson + variableFrischJahr * anteilEG;
-            const kostenFrischOG = grundProPerson + variableFrischJahr * anteilOG;
-            const kostenFrischDG = grundProPerson + variableFrischJahr * anteilDG;
-
-            const kostenAbwEG = rechnungAbwasserJahr * anteilEG;
-            const kostenAbwOG = rechnungAbwasserJahr * anteilOG;
-            const kostenAbwDG = rechnungAbwasserJahr * anteilDG;
-
-            const gesamtEG = kostenFrischEG + kostenAbwEG;
-            const gesamtOG = kostenFrischOG + kostenAbwOG;
-            const gesamtDG = kostenFrischDG + kostenAbwDG;
-
-            let html = `
-                <h2>Nebenkostenabrechnung Wasser ${new Date().getFullYear()}</h2>
-                
-                <div class="result">
-                    <h3>1. Verbrauchsübersicht (Jahr)</h3>
-                    <table>
-                        <tr><th>Wohnung</th><th>Bekannt + Schätzung</th><th>Unbekannt</th><th><strong>Gesamt m³</strong></th><th>Anteil</th></tr>
-                        <tr><td>EG</td><td>${bekanntEG.toFixed(2)}</td><td>${unbekEG.toFixed(2)}</td><td><strong>${totalEG.toFixed(2)}</strong></td><td>${(anteilEG*100).toFixed(1)} %</td></tr>
-                        <tr><td>OG</td><td>${bekanntOG.toFixed(2)}</td><td>${unbekOG.toFixed(2)}</td><td><strong>${totalOG.toFixed(2)}</strong></td><td>${(anteilOG*100).toFixed(1)} %</td></tr>
-                        <tr><td>DG</td><td>${bekanntDG.toFixed(2)}</td><td>${unbekDG.toFixed(2)}</td><td><strong>${totalDG.toFixed(2)}</strong></td><td>${(anteilDG*100).toFixed(1)} %</td></tr>
-                    </table>
-
-                    <h3>2. Kostenverteilung (Jahr)</h3>
-                    <table>
-                        <tr><th>Wohnung</th><th>Mieter</th><th>Grundpreis</th><th>Frischwasser</th><th>Abwasser</th><th><strong>Gesamt €</strong></th></tr>
-                        <tr><td>EG</td><td>${mieterEG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischEG.toFixed(2)}</td><td>${kostenAbwEG.toFixed(2)}</td><td><strong>${gesamtEG.toFixed(2)}</strong></td></tr>
-                        <tr><td>OG</td><td>${mieterOG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischOG.toFixed(2)}</td><td>${kostenAbwOG.toFixed(2)}</td><td><strong>${gesamtOG.toFixed(2)}</strong></td></tr>
-                        <tr><td>DG</td><td>${mieterDG}</td><td>${grundProPerson.toFixed(2)}</td><td>${kostenFrischDG.toFixed(2)}</td><td>${kostenAbwDG.toFixed(2)}</td><td><strong>${gesamtDG.toFixed(2)}</strong></td></tr>
-                    </table>
-                </div>
-            `;
-
-            document.getElementById('ergebnis').innerHTML = html;
-        }
-
-        window.onload = berechne;
-    </script>
+    window.addEventListener("load", berechne);
+  </script>
 </body>
 </html>
